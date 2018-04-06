@@ -10,7 +10,7 @@ import UIKit
 import AVKit
 import Vision
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,7 +28,6 @@ class ViewController: UIViewController {
         //set up video input
         guard let input = try? AVCaptureDeviceInput (device: captureDevice)
             else
-        
         {
             return
         }
@@ -43,8 +42,15 @@ class ViewController: UIViewController {
         view.layer.addSublayer(previewLayer)
         previewLayer.frame = view.frame
         
+        let dataOutput = AVCaptureVideoDataOutput()
+        dataOutput.setSampleBufferDelegate(self, queue:  DispatchQueue (label:"videoQueue"))
         
     }
+    // build frame for ML model
+    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        print("Camera successfully printed frame", Date())
+    }
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
