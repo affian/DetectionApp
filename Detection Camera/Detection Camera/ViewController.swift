@@ -8,6 +8,7 @@
 
 import UIKit
 import AVKit
+import Vision
 
 class ViewController: UIViewController {
 
@@ -15,15 +16,16 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        //launch camera session
         let captureSession = AVCaptureSession()
-        
+        //setup camera
         guard let captureDevice = AVCaptureDevice.default(for: .video)
             else
         {
             return
             
         }
-        
+        //set up video input
         guard let input = try? AVCaptureDeviceInput (device: captureDevice)
             else
         
@@ -35,6 +37,11 @@ class ViewController: UIViewController {
         
         captureSession.startRunning()
         
+        //set up video output
+        let previewLayer = AVCaptureVideoPreviewLayer (session: captureSession)
+        
+        view.layer.addSublayer(previewLayer)
+        previewLayer.frame = view.frame
         
         
     }
