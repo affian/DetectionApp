@@ -49,9 +49,26 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     // build frame for ML model
     func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         print("Camera successfully printed frame", Date())
+    
+    
+    guard let pixelBuffer : CVPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+        else
+    {
+    return
     }
     
-
+    let request = VNCoreMLRequest(model: <#T##VNCoreMLModel#>)
+    {
+        (finishedReq, err) in
+        
+        //check the error
+        
+        print(finishedReq.results)
+    }
+    
+    VNImageRequestHandler(cvPixelBuffer: <#T##CVPixelBuffer#>, options: <#T##[VNImageOption : Any]#>).perform(<#T##requests: [VNRequest]##[VNRequest]#>)
+        
+    }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
