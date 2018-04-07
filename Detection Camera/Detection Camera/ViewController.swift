@@ -18,6 +18,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         
         //launch camera session
         let captureSession = AVCaptureSession()
+        
+        captureSession.sessionPreset = .photo
         //setup camera
         guard let captureDevice = AVCaptureDevice.default(for: .video)
             else
@@ -45,35 +47,58 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         let dataOutput = AVCaptureVideoDataOutput()
         dataOutput.setSampleBufferDelegate(self, queue:  DispatchQueue (label:"videoQueue"))
         
+     
+        // build frame for ML model
+        
     }
-    // build frame for ML model
-    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        print("Camera successfully printed frame", Date())
     
-    
-    guard let pixelBuffer : CVPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
-        else
+    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection)
     {
-    return
+        //print("Camera successfully printed frame", Date())
+        
+        guard let pixelBuffer : CVPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+            else
+        {
+            return
+        }
+        // set squeezenet model
+        guard let model = try? VNCoreMLModel(for: Resnet50().model)
+            else
+        {
+            return
+        }
+        
+        let request = VNCoreMLRequest(model: model)
+        {
+            (finishedReq, err) in
+            
+            //check the error
+            
+            //print(finishedReq.results as Any)
+            
+            //put results in array of classification observation
+            
+            guard let results = finishedReq.results as? [VNClassificationObservation]
+                else
+            {
+                return
+            }
+            
+            //print first object camera sees
+            guard let firstObservation = results.first
+                else
+            {
+                return
+            }
+            
+            //print results to console
+            print(firstObservation.identifier, firstObservation.confidence)
+        }
+        
+        try? VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:]).perform([request])
+        
     }
     
-    let request = VNCoreMLRequest(model: <#T##VNCoreMLModel#>)
-    {
-        (finishedReq, err) in
-        
-        //check the error
-        
-        print(finishedReq.results)
-    }
-    
-    VNImageRequestHandler(cvPixelBuffer: <#T##CVPixelBuffer#>, options: <#T##[VNImageOption : Any]#>).perform(<#T##requests: [VNRequest]##[VNRequest]#>)
-        
-    }
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
 
 }
 
