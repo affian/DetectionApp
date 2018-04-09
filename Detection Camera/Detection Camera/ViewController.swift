@@ -12,6 +12,14 @@ import Vision
 
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
+    let identifierLabel: UILabel = {
+        let label = UILabel()
+        label.backgroundColor = .white
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -25,7 +33,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             else
         {
             return
-            
         }
         //set up video input
         guard let input = try? AVCaptureDeviceInput (device: captureDevice)
@@ -47,21 +54,31 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         let dataOutput = AVCaptureVideoDataOutput()
         dataOutput.setSampleBufferDelegate(self, queue:  DispatchQueue (label:"videoQueue"))
         
-     
-        // build frame for ML model
+        // display confidence identifier label on frame
+        setupIdentifierConfidenceLabel()
         
     }
     
-    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection)
+    // setup confidence identifier label at bottom of frame
+    fileprivate func setupIdentifierConfidenceLabel()
+    {
+        view.addSubview(identifierLabel)
+        identifierLabel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -32).isActive = true
+        identifierLabel.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        identifierLabel.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        identifierLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    }
+    
+    // build frame for ML model
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection)
     {
         //print("Camera successfully printed frame", Date())
-        
         guard let pixelBuffer : CVPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
             else
         {
             return
         }
-        // set squeezenet model
+        // set Resnet50 model
         guard let model = try? VNCoreMLModel(for: Resnet50().model)
             else
         {
@@ -93,6 +110,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             
             //print results to console
             print(firstObservation.identifier, firstObservation.confidence)
+            
+            DispatchQueue.main.async {
+                self.identifierLabel.text = "\(firstObservation.identifier) \(firstObservation.confidence * 100)"
+            }
         }
         
         try? VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:]).perform([request])
